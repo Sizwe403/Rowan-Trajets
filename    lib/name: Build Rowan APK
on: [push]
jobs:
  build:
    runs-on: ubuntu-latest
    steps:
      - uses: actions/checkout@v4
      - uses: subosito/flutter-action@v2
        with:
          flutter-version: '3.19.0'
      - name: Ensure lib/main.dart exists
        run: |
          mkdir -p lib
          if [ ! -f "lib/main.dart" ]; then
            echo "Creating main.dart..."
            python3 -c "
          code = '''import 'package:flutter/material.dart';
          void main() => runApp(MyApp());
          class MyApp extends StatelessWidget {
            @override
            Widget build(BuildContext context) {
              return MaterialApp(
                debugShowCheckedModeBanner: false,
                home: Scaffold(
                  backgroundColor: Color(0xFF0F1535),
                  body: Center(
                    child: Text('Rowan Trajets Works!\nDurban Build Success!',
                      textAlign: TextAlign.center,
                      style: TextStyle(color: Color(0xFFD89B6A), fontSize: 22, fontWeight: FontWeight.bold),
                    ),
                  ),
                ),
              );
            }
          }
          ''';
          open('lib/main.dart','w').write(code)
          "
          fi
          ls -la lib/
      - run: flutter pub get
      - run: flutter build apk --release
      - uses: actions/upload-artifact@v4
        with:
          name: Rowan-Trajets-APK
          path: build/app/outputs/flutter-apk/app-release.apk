@@ -1,0 +1,46 @@
+name: Build Rowan APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.0'
+      - name: Ensure lib/main.dart exists
+        run: |
+          mkdir -p lib
+          if [ ! -f "lib/main.dart" ]; then
+            echo "Creating main.dart..."
+            python3 -c "
+          code = '''import 'package:flutter/material.dart';
+          void main() => runApp(MyApp());
+          class MyApp extends StatelessWidget {
+            @override
+            Widget build(BuildContext context) {
+              return MaterialApp(
+                debugShowCheckedModeBanner: false,
+                home: Scaffold(
+                  backgroundColor: Color(0xFF0F1535),
+                  body: Center(
+                    child: Text('Rowan Trajets Works!\nDurban Build Success!',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Color(0xFFD89B6A), fontSize: 22, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              );
+            }
+          }
+          ''';
+          open('lib/main.dart','w').write(code)
+          "
+          fi
+          ls -la lib/
+      - run: flutter pub get
+      - run: flutter build apk --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Rowan-Trajets-APK
+          path: build/app/outputs/flutter-apk/app-release.apk
